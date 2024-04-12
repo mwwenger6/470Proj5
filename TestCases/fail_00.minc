@@ -1,0 +1,5 @@
+func main :: num ()
+begin
+    1 + false;
+    return 3.142592;
+end
