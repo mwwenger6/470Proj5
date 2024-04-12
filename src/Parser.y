@@ -123,28 +123,29 @@ arg_list        : arg_list COMMA expr                           { $$ = arglist__
                 ;
 
 expr            : expr ADD expr                                 { $$ = expr____expr_ADD_expr($1,$2,$3); }
-                | expr SUB expr                                 { $$ = expr____expr_SUB_expr($1, $3); }
-                | expr MUL expr                                 { $$ = expr____expr_MUL_expr($1, $3); }
-                | expr DIV expr                                 { $$ = expr____expr_DIV_expr($1, $3); }
-                | expr MOD expr                                 { $$ = expr____expr_MOD_expr($1, $3); }
+                | expr SUB expr                                 { $$ = expr____expr_SUB_expr($1,$2, $3); }
+                | expr MUL expr                                 { $$ = expr____expr_MUL_expr($1,$2, $3); }
+                | expr DIV expr                                 { $$ = expr____expr_DIV_expr($1,$2, $3); }
+                | expr MOD expr                                 { $$ = expr____expr_MOD_expr($1,$2, $3); }
                 | expr EQ  expr                                 { $$ = expr____expr_EQ_expr($1,$2,$3); }
-                | expr NE  expr                                 { $$ = expr____expr_NE_expr($1, $3); }
-                | expr LE  expr                                 { $$ = expr____expr_LE_expr($1, $3); }
-                | expr LT  expr                                 { $$ = expr____expr_LT_expr($1, $3); }
-                | expr GE  expr                                 { $$ = expr____expr_GE_expr($1, $3); }
-                | expr GT  expr                                 { $$ = expr____expr_GT_expr($1, $3); }
-                | expr AND expr                                 { $$ = expr____expr_AND_expr($1, $3); }
-                | expr OR expr                                  { $$ = expr____expr_OR_expr($1, $3); }
-                | NOT expr                                      { $$ = expr____NOT_expr($2); }
+                | expr NE  expr                                 { $$ = expr____expr_NE_expr($1,$2, $3); }
+                | expr LE  expr                                 { $$ = expr____expr_LE_expr($1,$2, $3); }
+                | expr LT  expr                                 { $$ = expr____expr_LT_expr($1,$2, $3); }
+                | expr GE  expr                                 { $$ = expr____expr_GE_expr($1,$2, $3); }
+                | expr GT  expr                                 { $$ = expr____expr_GT_expr($1,$2, $3); }
+                | expr AND expr                                 { $$ = expr____expr_AND_expr($1,$2, $3); }
+                | expr OR expr                                  { $$ = expr____expr_OR_expr($1,$2, $3); }
+                | NOT expr                                      { $$ = expr____NOT_expr($1, $2); }
                 | LPAREN expr RPAREN                            { $$ = expr____LPAREN_expr_RPAREN($1,$2,$3); }
                 | IDENT                                         { $$ = expr____IDENT($1); }
-                | NUM_LIT                                       { $$ = expr____NUMLIT($1); }
+                | NUM_LIT                                       { $$ = expr____NUMLIT($1);}
                 | BOOL_LIT                                      { $$ = expr____BOOL_LIT($1); }
                 | IDENT LPAREN args RPAREN                      { $$ = expr____IDENT_LPAREN_args_RPAREN($1,$2,$3,$4); }
                 | NEW prim_type LBRACKET expr RBRACKET          { $$ = expr____NEW_primtype_LBRACKET_expr_RBRACKET($2, $4); }
                 | IDENT LBRACKET expr RBRACKET                  { $$ = expr____IDENT_LBRACKET_expr_RBRACKET($1, $3); }
                 | IDENT DOT SIZE                                { $$ = expr____IDENT_DOT_SIZE($1); }
                 ;
+
 
 %%
     private Lexer lexer;

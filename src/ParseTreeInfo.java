@@ -51,28 +51,11 @@ public class ParseTreeInfo
     public static class ArgInfo
     {
     }
-    public static class ExprInfo {
-        private String type;
-        private int line;
-        private int column;
-    
-        public ExprInfo() {}
-    
-        public String getType() {
-            return type;
-        }
-    
-        public void setType(String type) {
-            this.type = type;
-        }
-    
-        public int getLine() {
-            return line;
-        }
-    
-        public int getColumn() {
-            return column;
-        }
+    public static class ExprInfo
+    {
+        public String type;           // Type of the expression (int, string, bool, etc.)
+        public int lineNumber;        // Line number in the source code
+        public int columnNumber;      // Column number in the source code
+        public Object value; 
     }
-    
 }

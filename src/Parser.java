@@ -820,19 +820,19 @@ case 38:
 break;
 case 39:
 //#line 126 "Parser.y"
-{ yyval.obj = expr____expr_SUB_expr(val_peek(2).obj, val_peek(0).obj); }
+{ yyval.obj = expr____expr_SUB_expr(val_peek(2).obj,val_peek(1).obj, val_peek(0).obj); }
 break;
 case 40:
 //#line 127 "Parser.y"
-{ yyval.obj = expr____expr_MUL_expr(val_peek(2).obj, val_peek(0).obj); }
+{ yyval.obj = expr____expr_MUL_expr(val_peek(2).obj,val_peek(1).obj, val_peek(0).obj); }
 break;
 case 41:
 //#line 128 "Parser.y"
-{ yyval.obj = expr____expr_DIV_expr(val_peek(2).obj, val_peek(0).obj); }
+{ yyval.obj = expr____expr_DIV_expr(val_peek(2).obj,val_peek(1).obj, val_peek(0).obj); }
 break;
 case 42:
 //#line 129 "Parser.y"
-{ yyval.obj = expr____expr_MOD_expr(val_peek(2).obj, val_peek(0).obj); }
+{ yyval.obj = expr____expr_MOD_expr(val_peek(2).obj,val_peek(1).obj, val_peek(0).obj); }
 break;
 case 43:
 //#line 130 "Parser.y"
@@ -840,35 +840,35 @@ case 43:
 break;
 case 44:
 //#line 131 "Parser.y"
-{ yyval.obj = expr____expr_NE_expr(val_peek(2).obj, val_peek(0).obj); }
+{ yyval.obj = expr____expr_NE_expr(val_peek(2).obj,val_peek(1).obj, val_peek(0).obj); }
 break;
 case 45:
 //#line 132 "Parser.y"
-{ yyval.obj = expr____expr_LE_expr(val_peek(2).obj, val_peek(0).obj); }
+{ yyval.obj = expr____expr_LE_expr(val_peek(2).obj,val_peek(1).obj, val_peek(0).obj); }
 break;
 case 46:
 //#line 133 "Parser.y"
-{ yyval.obj = expr____expr_LT_expr(val_peek(2).obj, val_peek(0).obj); }
+{ yyval.obj = expr____expr_LT_expr(val_peek(2).obj,val_peek(1).obj, val_peek(0).obj); }
 break;
 case 47:
 //#line 134 "Parser.y"
-{ yyval.obj = expr____expr_GE_expr(val_peek(2).obj, val_peek(0).obj); }
+{ yyval.obj = expr____expr_GE_expr(val_peek(2).obj,val_peek(1).obj, val_peek(0).obj); }
 break;
 case 48:
 //#line 135 "Parser.y"
-{ yyval.obj = expr____expr_GT_expr(val_peek(2).obj, val_peek(0).obj); }
+{ yyval.obj = expr____expr_GT_expr(val_peek(2).obj,val_peek(1).obj, val_peek(0).obj); }
 break;
 case 49:
 //#line 136 "Parser.y"
-{ yyval.obj = expr____expr_AND_expr(val_peek(2).obj, val_peek(0).obj); }
+{ yyval.obj = expr____expr_AND_expr(val_peek(2).obj,val_peek(1).obj, val_peek(0).obj); }
 break;
 case 50:
 //#line 137 "Parser.y"
-{ yyval.obj = expr____expr_OR_expr(val_peek(2).obj, val_peek(0).obj); }
+{ yyval.obj = expr____expr_OR_expr(val_peek(2).obj,val_peek(1).obj, val_peek(0).obj); }
 break;
 case 51:
 //#line 138 "Parser.y"
-{ yyval.obj = expr____NOT_expr(val_peek(0).obj); }
+{ yyval.obj = expr____NOT_expr(val_peek(1).obj, val_peek(0).obj); }
 break;
 case 52:
 //#line 139 "Parser.y"
@@ -880,7 +880,7 @@ case 53:
 break;
 case 54:
 //#line 141 "Parser.y"
-{ yyval.obj = expr____NUMLIT(val_peek(0).obj); }
+{ yyval.obj = expr____NUMLIT(val_peek(0).obj);}
 break;
 case 55:
 //#line 142 "Parser.y"
@@ -947,16 +947,7 @@ break;
 
 
 //## run() --- for Thread #######################################
-/**
- * A default run method, used for operating this parser
- * object in the background.  It is intended for extending Thread
- * or implementing Runnable.  Turn off with -Jnorun .
- * @throws Exception 
- */
-public void run() throws Exception
-{
-  yyparse();
-}
+//## The -Jnorun option was used ##
 //## end of method run() ########################################
 
 
