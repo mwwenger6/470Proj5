@@ -20,7 +20,7 @@ public class Program {
          if(args.length == 0)
          args = new String[]
          {
-             "D:\\Spring2024\\CMPSC470\\Proj5\\TestCases\\fail_07a.minc",
+             "D:\\Spring2024\\CMPSC470\\Proj5\\TestCases\\fail_08a.minc",
          };
 
         if(args.length <= 0)

@@ -1,5 +1,9 @@
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Env {
     private Map<String, Object> table;
@@ -23,4 +27,14 @@ public class Env {
         }
         return null;
     }
+    public Object GetLocal(String name) {
+        return table.get(name);
+    }
+    
+    public void printEnvironment() {
+        table.entrySet().forEach(entry -> {
+            System.out.println("Scope " + entry.getKey() + " -> " + entry.getValue());
+        });
+    }
+    
 }

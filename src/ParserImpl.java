@@ -66,6 +66,7 @@ public class ParserImpl
         // 2. create a new symbol table on top of env
         // 3. add parameters into top-local scope of env
         // 4. etc.
+        // env = new Env(env);
         return null;
     }
     Object fundecl____FUNC_IDENT_TYPEOF_typespec_LPAREN_params_RPAREN_BEGIN_localdecls_X10_stmtlist_END(Object s1, Object s2, Object s3, Object s4, Object s5, Object s6, Object s7, Object s8, Object s9, Object s10, Object s11, Object s12) throws Exception
@@ -79,6 +80,7 @@ public class ParserImpl
         ArrayList<ParseTree.LocalDecl>   localdecls = (ArrayList<ParseTree.LocalDecl>  )s9;
         ArrayList<ParseTree.Stmt>        stmtlist   = (ArrayList<ParseTree.Stmt>       )s11;
         Token                            end        = (Token                           )s12;
+        // env = env.prev;
         ParseTree.FuncDecl funcdecl = new ParseTree.FuncDecl(id.lexeme, rettype, params, localdecls, stmtlist);
         return funcdecl;
     }
@@ -172,6 +174,7 @@ public class ParserImpl
     public Object compoundstmt____BEGIN_localdecls_stmtlist_END(Object s1, Object s2) throws Exception {
         ArrayList<ParseTree.LocalDecl> localDecls = (ArrayList<ParseTree.LocalDecl>)s1; // s1 is the list of local declarations
         ArrayList<ParseTree.Stmt> stmtList = (ArrayList<ParseTree.Stmt>)s2; // s2 is the list of statements within the block
+        env = env.prev;
         return new ParseTree.CompoundStmt(localDecls, stmtList);
     }
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -185,13 +188,14 @@ public class ParserImpl
     }
     Object localdecls____eps() throws Exception
     {
+        env = new Env(env);
         return new ArrayList<ParseTree.LocalDecl>();
     }
     Object localdecl____VAR_IDENT_TYPEOF_typespec_SEMI(Object s1, Object s2, Object s3, Object s4, Object s5)throws Exception{
         Token              id       = (Token             )s2;
         ParseTree.TypeSpec typespec = (ParseTree.TypeSpec)s4;
         ParseTree.LocalDecl localdecl = new ParseTree.LocalDecl(id.lexeme, typespec);
-        if (env.Get(id.lexeme) != null) {  // GetLocal should only check the current scope
+        if (env.GetLocal(id.lexeme) != null) {  // GetLocal should only check the current scope
             throw new Exception("[Error at " + id.lineno + ":" + id.column + "] Identifier " + id.lexeme + " is already defined.");
         }
         env.Put(id.lexeme, typespec.typename);
