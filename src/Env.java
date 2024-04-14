@@ -7,6 +7,7 @@ public class Env {
     private HashMap<String, String> functionTypes = new HashMap<>();
     private HashMap<String, Boolean> functionReturns = new HashMap<>();
     private HashMap<String, ArrayList<String>> paramTypes = new HashMap<>(); 
+    private HashMap<String, ArrayList<String>> paramIdents = new HashMap<>(); 
     private String currentFunction = null; 
     public Env prev;
 
@@ -56,6 +57,20 @@ public class Env {
             ArrayList<String> types = e.paramTypes.get(funcName);
             if (types != null) {
                 return new ArrayList<>(types);
+            }
+        }
+        return new ArrayList<>();
+    }
+
+    public void setParamIdents(String funcName, ArrayList<String> idents) {
+        paramIdents.put(funcName, new ArrayList<>(idents));
+    }
+
+    public ArrayList<String> getParamIdents(String funcName) {
+        for (Env e = this; e != null; e = e.prev) {
+            ArrayList<String> idents = e.paramIdents.get(funcName);
+            if (idents != null) {
+                return new ArrayList<>(idents);
             }
         }
         return new ArrayList<>();

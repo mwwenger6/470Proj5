@@ -54,10 +54,16 @@ public class ParserImpl
         return primtype;
     }
     public Object param____ident_typeof_typespec(Object s1, Object s3) throws Exception {
-        String ident = ((Token)s1).lexeme; // Extract identifier
+        Token token = (Token)s1; // Extract identifier
         ParseTree.TypeSpec typespec = (ParseTree.TypeSpec)s3; // Already a TypeSpec object
-        env.Put(ident, typespec.typename);
-        return new ParseTree.Param(ident, typespec);
+        if (env.GetLocal(token.lexeme) != null) {
+            throw new Exception("[Error at " + token.lineno + ":" + token.column + "] Identifier " + token.lexeme + " is already defined.");
+        }
+        ArrayList<String> identList = env.getParamIdents(env.getCurrentFunction());
+        identList.add(token.lexeme);
+        env.setParamIdents(env.getCurrentFunction(), identList);
+        env.Put(token.lexeme, typespec.typename);
+        return new ParseTree.Param(token.lexeme, typespec);
     }
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
@@ -70,11 +76,24 @@ public class ParserImpl
     	Token                            id         = (Token                           )s2;
     	ParseTree.TypeSpec               rettype    = (ParseTree.TypeSpec              )s4;
         ArrayList<ParseTree.Param>       params     = (ArrayList<ParseTree.Param>      )s6;
+        if(id.lexeme.equals("main")){
+            if(env.getFunctionType("main()") != null)
+                throw new Exception("The program must have one main function that returns num value and has no parameters.");
+            if(!rettype.typename.equals("num"))
+                throw new Exception("The program must have one main function that returns num value and has no parameters.");
+            if(params.size() != 0)
+                throw new Exception("The program must have one main function that returns num value and has no parameters.");
+        }
         ArrayList<String> paramTypes = new ArrayList<>();
+        ArrayList<String> paramIdents = new ArrayList<>();
+
         for (ParseTree.Param param : params) {
             paramTypes.add(param.typespec.typename);
+            paramIdents.add(param.ident);
         }
+
         env.setParamTypes(id.lexeme, paramTypes);
+        env.setParamIdents(id.lexeme, paramIdents);
     	env.setCurrentFunction(id.lexeme);
         env.putFunctionType(id.lexeme, rettype.typename);
         return null;
@@ -213,7 +232,9 @@ public class ParserImpl
         Token              id       = (Token             )s2;
         ParseTree.TypeSpec typespec = (ParseTree.TypeSpec)s4;
         ParseTree.LocalDecl localdecl = new ParseTree.LocalDecl(id.lexeme, typespec);
-        if (env.GetLocal(id.lexeme) != null) {  // GetLocal should only check the current scope
+        ArrayList<String> paramIdents = env.getParamIdents(env.getCurrentFunction());
+
+        if (env.GetLocal(id.lexeme) != null || paramIdents.contains(id.lexeme)) {  // GetLocal should only check the current scope
             throw new Exception("[Error at " + id.lineno + ":" + id.column + "] Identifier " + id.lexeme + " is already defined.");
         }
         env.Put(id.lexeme, typespec.typename);
