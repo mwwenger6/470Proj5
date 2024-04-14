@@ -60,7 +60,7 @@ public class ParserImpl
         return new ParseTree.Param(ident, typespec);
     }
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+    
     Object fundecl____FUNC_IDENT_TYPEOF_typespec_LPAREN_params_RPAREN_BEGIN_localdecls_10X_stmtlist_END(Object s1, Object s2, Object s3, Object s4, Object s5, Object s6, Object s7, Object s8, Object s9) throws Exception
     {
         // 1. add function_type_info object (name, return type, params) into the global scope of env
@@ -69,6 +69,12 @@ public class ParserImpl
         // 4. etc.
     	Token                            id         = (Token                           )s2;
     	ParseTree.TypeSpec               rettype    = (ParseTree.TypeSpec              )s4;
+        ArrayList<ParseTree.Param>       params     = (ArrayList<ParseTree.Param>      )s6;
+        ArrayList<String> paramTypes = new ArrayList<>();
+        for (ParseTree.Param param : params) {
+            paramTypes.add(param.typespec.typename);
+        }
+        env.setParamTypes(id.lexeme, paramTypes);
     	env.setCurrentFunction(id.lexeme);
         env.putFunctionType(id.lexeme, rettype.typename);
         return null;
@@ -373,11 +379,19 @@ public class ParserImpl
         Token id = (Token)s1;
         ParseTree.ExprIdent expr = new ParseTree.ExprIdent(id.lexeme);
         Object id_info = env.Get(id.lexeme);
+        if(!expr.info.hasParen && env.getFunctionType(id.lexeme + "()") != null){
+            throw new Exception("[Error at " + id.lineno + ":" + id.column + "] Identifier " + id.lexeme + " should be non-function type.");
+        }
+        // if(expr.info.hasParen && env.getFunctionType(id.lexeme + "()") == null){
+        //     throw new Exception("[Error at " + id.lineno + ":" + id.column + "] Identifier " + id.lexeme + " should be function.");
+        // }
         if (id_info == null) {
-            // If the identifier is not found, throw an exception with detailed error information
             throw new Exception("[Error at " + id.lineno + ":" + id.column + "] Variable " + id.lexeme + " is not defined.");
         }
         expr.info.type = (String)id_info; 
+        expr.info.lineNumber = id.lineno;
+        expr.info.columnNumber = id.column;
+        expr.info.identName = id.lexeme;
         expr.reladdr = 1;
         return expr;
     }
@@ -390,19 +404,22 @@ public class ParserImpl
         // 5. create and return node that has the value_type of env(id.lexeme).return_type
         Token                    id   = (Token                   )s1;
         ArrayList<ParseTree.Arg> args = (ArrayList<ParseTree.Arg>)s3;
-        Object func_attr = env.Get(id.lexeme);
-        // {
-        //     // check if argument types match with function param types
-        //     if(env.Get(id.lexeme).equals("num()")
-        //         && (args.size() == 0)
-        //         )
-        //     {} // ok
-        //     else
-        //     {
-        //         throw new Exception("semantic error");
-        //     }
-        // }
-        return new ParseTree.ExprFuncCall(id.lexeme, args);
+        if(env.GetLocal(id.lexeme) != null)
+            throw new Exception("[Error at " + id.lineno + ":" + id.column + "] Identifier " + id.lexeme + " should be function.");
+        if(env.getFunctionType(id.lexeme + "()") == null)
+            throw new Exception("[Error at " + id.lineno + ":" + id.column + "] Function " + id.lexeme + "() is not defined.");
+        if(env.getParamTypes(id.lexeme).size() != args.size())
+            throw new Exception("[Error at " + id.lineno + ":" + id.column + "] Function " + id.lexeme + "() should be called with the correct number of arguments.");
+        for (int i = 0; i < args.size(); i++) {
+            if (!args.get(i).expr.info.type.equals(env.getParamTypes(id.lexeme).get(i))) {
+                String numPlacement = getNumberPlacement(i+1);
+                throw new Exception("[Error at " + args.get(i).expr.info.lineNumber + ":" + args.get(i).expr.info.columnNumber + "] The " + numPlacement + " argument of function " + id.lexeme + "() should be " + env.getParamTypes(id.lexeme).get(i) + " value, instead of " + args.get(i).expr.info.type + " value.");
+            }
+        }
+        ParseTree.ExprFuncCall result = new ParseTree.ExprFuncCall(id.lexeme, args);
+        result.info.type = env.getFunctionType(id.lexeme + "()");
+        result.info.hasParen = true;
+        return result;
     }
     public Object expr____BOOL_LIT(Object s1) throws Exception {
         Token token = (Token)s1; // Token containing boolean literal
@@ -599,7 +616,8 @@ public class ParserImpl
         @SuppressWarnings("unchecked")
         ArrayList<ParseTree.Arg> argList = (ArrayList<ParseTree.Arg>)s1;
         ParseTree.Expr expr = (ParseTree.Expr)s3;
-        argList.add(new ParseTree.Arg(expr));
+        ParseTree.Arg arg = new ParseTree.Arg(expr);
+        argList.add(arg);
         return argList;
     }
 
@@ -607,8 +625,26 @@ public class ParserImpl
     public Object arglist____expr(Object s1) throws Exception {
         ArrayList<ParseTree.Arg> argList = new ArrayList<>();
         ParseTree.Expr expr = (ParseTree.Expr)s1;
-        argList.add(new ParseTree.Arg(expr));
+        ParseTree.Arg arg = new ParseTree.Arg(expr);
+        argList.add(arg);
         return argList;
     }
-
+    private String getNumberPlacement(int number) {
+        int hundredRemainder = number % 100;
+        int tenRemainder = number % 10;
+        if (hundredRemainder - tenRemainder == 10) {
+            return number + "th";
+        }
+        switch (tenRemainder) {
+            case 1:
+                return number + "st";
+            case 2:
+                return number + "nd";
+            case 3:
+                return number + "rd";
+            default:
+                return number + "th";
+        }
+    }
+    
 }

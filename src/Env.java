@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -5,6 +6,7 @@ public class Env {
     private Map<String, Object> table;
     private HashMap<String, String> functionTypes = new HashMap<>();
     private HashMap<String, Boolean> functionReturns = new HashMap<>();
+    private HashMap<String, ArrayList<String>> paramTypes = new HashMap<>(); 
     private String currentFunction = null; 
     public Env prev;
 
@@ -45,6 +47,20 @@ public class Env {
         currentFunction = funcName + "()";
         functionReturns.put(currentFunction, false); // Initialize with no return encountered
     }
+
+    public void setParamTypes(String funcName, ArrayList<String> types) {
+        paramTypes.put(funcName, new ArrayList<>(types));  // Copy to ensure isolation from external changes
+    }
+    public ArrayList<String> getParamTypes(String funcName) {
+        for (Env e = this; e != null; e = e.prev) {
+            ArrayList<String> types = e.paramTypes.get(funcName);
+            if (types != null) {
+                return new ArrayList<>(types);
+            }
+        }
+        return new ArrayList<>();
+    }
+    
 
     public String getCurrentFunction() {
         return currentFunction;

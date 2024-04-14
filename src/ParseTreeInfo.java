@@ -44,6 +44,10 @@ public class ParseTreeInfo
     }
     public static class ParamInfo
     {
+        public String type;           // Type of the expression (int, string, bool, etc.)
+        public int lineNumber;        // Line number in the source code
+        public int columnNumber;      // Column number in the source code
+        public Object value;
     }
     public static class LocalDeclInfo
     {
@@ -53,6 +57,10 @@ public class ParseTreeInfo
     }
     public static class ArgInfo
     {
+        public String type;           // Type of the expression (int, string, bool, etc.)
+        public int lineNumber;        // Line number in the source code
+        public int columnNumber;      // Column number in the source code
+        public Object value;
     }
     public static class ExprInfo
     {
@@ -60,5 +68,7 @@ public class ParseTreeInfo
         public int lineNumber;        // Line number in the source code
         public int columnNumber;      // Column number in the source code
         public Object value; 
+        public boolean hasParen;
+        public String identName;
     }
 }
