@@ -32,12 +32,15 @@ public class ParseTreeInfo
     // You should not modify ParseTree.java
     public static class TypeSpecInfo
     {
+        public String typename;
     }
     public static class ProgramInfo
     {
     }
     public static class FuncDeclInfo
     {
+        public String typename;
+        public String ident;
     }
     public static class ParamInfo
     {

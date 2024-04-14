@@ -66,7 +66,17 @@ public class ParserImpl
         // 2. create a new symbol table on top of env
         // 3. add parameters into top-local scope of env
         // 4. etc.
-        // env = new Env(env);
+        ArrayList<ParseTree.FuncDecl> functionDeclarations = new ArrayList<>();
+        Token id = (Token)s2;
+        ParseTree.TypeSpec rettype = (ParseTree.TypeSpec)s4;
+        ArrayList<ParseTree.Param> params = (ArrayList<ParseTree.Param>)s6;
+        ArrayList<ParseTree.LocalDecl> localdecls = (ArrayList<ParseTree.LocalDecl>)s9; // Assuming s8 is the correct index for local declarations
+    
+        ParseTree.FuncDecl funcDecl = new ParseTree.FuncDecl(id.lexeme, rettype, params, localdecls, null);
+        functionDeclarations.add(funcDecl);
+        if (parsetree_program == null) {
+            parsetree_program = new ParseTree.Program(functionDeclarations);
+        }
         return null;
     }
     Object fundecl____FUNC_IDENT_TYPEOF_typespec_LPAREN_params_RPAREN_BEGIN_localdecls_X10_stmtlist_END(Object s1, Object s2, Object s3, Object s4, Object s5, Object s6, Object s7, Object s8, Object s9, Object s10, Object s11, Object s12) throws Exception
@@ -154,6 +164,13 @@ public class ParserImpl
         // 2. etc.
         // 3. create and return node
         ParseTree.Expr expr = (ParseTree.Expr)s2;
+        ParseTree.FuncDecl funcDecl = (ParseTree.FuncDecl) parsetree_program.Exec();
+        String rettype = funcDecl.rettype.typename;
+        String ident = funcDecl.ident;
+        if (!rettype.equals(expr.info.type)) {
+            throw new Exception("[Error at " + expr.info.lineNumber + ":" + expr.info.columnNumber + 
+                "] Function " + ident + " should return " + rettype + " value, instead of " + expr.info.type + " value.");
+        }
         return new ParseTree.ReturnStmt(expr);
     }
     public Object ifstmt____IF_expr_THEN_stmtlist_ELSE_stmtlist_END(Object s1, Object s3, Object s5) throws Exception {

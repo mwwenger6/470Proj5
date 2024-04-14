@@ -17,12 +17,11 @@ public class Program {
         //  +"end\n"
         //  );
 
-         if(args.length == 0)
-         args = new String[]
-         {
-             "D:\\Spring2024\\CMPSC470\\Proj5\\TestCases\\fail_08a.minc",
-         };
-
+        if(args.length == 0)
+        args = new String[]
+        {
+            "D:\\Spring2024\\CMPSC470\\Proj5\\TestCases\\fail_08a.minc",
+        };
         if(args.length <= 0)
             return;
         String minicpath = args[0];
