@@ -56,6 +56,7 @@ public class ParserImpl
     public Object param____ident_typeof_typespec(Object s1, Object s3) throws Exception {
         String ident = ((Token)s1).lexeme; // Extract identifier
         ParseTree.TypeSpec typespec = (ParseTree.TypeSpec)s3; // Already a TypeSpec object
+        env.Put(ident, typespec.typename);
         return new ParseTree.Param(ident, typespec);
     }
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,17 +67,10 @@ public class ParserImpl
         // 2. create a new symbol table on top of env
         // 3. add parameters into top-local scope of env
         // 4. etc.
-        ArrayList<ParseTree.FuncDecl> functionDeclarations = new ArrayList<>();
-        Token id = (Token)s2;
-        ParseTree.TypeSpec rettype = (ParseTree.TypeSpec)s4;
-        ArrayList<ParseTree.Param> params = (ArrayList<ParseTree.Param>)s6;
-        ArrayList<ParseTree.LocalDecl> localdecls = (ArrayList<ParseTree.LocalDecl>)s9; // Assuming s8 is the correct index for local declarations
-    
-        ParseTree.FuncDecl funcDecl = new ParseTree.FuncDecl(id.lexeme, rettype, params, localdecls, null);
-        functionDeclarations.add(funcDecl);
-        if (parsetree_program == null) {
-            parsetree_program = new ParseTree.Program(functionDeclarations);
-        }
+    	Token                            id         = (Token                           )s2;
+    	ParseTree.TypeSpec               rettype    = (ParseTree.TypeSpec              )s4;
+    	env.setCurrentFunction(id.lexeme);
+        env.putFunctionType(id.lexeme, rettype.typename);
         return null;
     }
     Object fundecl____FUNC_IDENT_TYPEOF_typespec_LPAREN_params_RPAREN_BEGIN_localdecls_X10_stmtlist_END(Object s1, Object s2, Object s3, Object s4, Object s5, Object s6, Object s7, Object s8, Object s9, Object s10, Object s11, Object s12) throws Exception
@@ -90,8 +84,12 @@ public class ParserImpl
         ArrayList<ParseTree.LocalDecl>   localdecls = (ArrayList<ParseTree.LocalDecl>  )s9;
         ArrayList<ParseTree.Stmt>        stmtlist   = (ArrayList<ParseTree.Stmt>       )s11;
         Token                            end        = (Token                           )s12;
-        // env = env.prev;
         ParseTree.FuncDecl funcdecl = new ParseTree.FuncDecl(id.lexeme, rettype, params, localdecls, stmtlist);
+        // Store the function return type
+        if (!env.isReturnEncountered() && !rettype.typename.equals("void")) {
+            throw new Exception("[Error at " + id.lineno + ":" + id.column + "] Function " + id.lexeme + "() should return atleast one value.");
+        }
+        env.clearCurrentFunction();
         return funcdecl;
     }
 
@@ -160,16 +158,12 @@ public class ParserImpl
     }
     Object returnstmt____RETURN_expr_SEMI(Object s1, Object s2, Object s3) throws Exception
     {
-        // 1. check if expr.value_type matches with the current function return type
-        // 2. etc.
-        // 3. create and return node
+        String functionName = env.getCurrentFunction();
+        String expectedReturnType = env.getFunctionType(functionName);
         ParseTree.Expr expr = (ParseTree.Expr)s2;
-        ParseTree.FuncDecl funcDecl = (ParseTree.FuncDecl) parsetree_program.Exec();
-        String rettype = funcDecl.rettype.typename;
-        String ident = funcDecl.ident;
-        if (!rettype.equals(expr.info.type)) {
-            throw new Exception("[Error at " + expr.info.lineNumber + ":" + expr.info.columnNumber + 
-                "] Function " + ident + " should return " + rettype + " value, instead of " + expr.info.type + " value.");
+        env.markReturnEncountered(); 
+        if (!expr.info.type.equals(expectedReturnType)) {
+            throw new Exception("[Error at " + expr.info.lineNumber + ":" + expr.info.columnNumber + "] Function " + functionName + " should return " + expectedReturnType + " value, instead of " + expr.info.type + " value.");
         }
         return new ParseTree.ReturnStmt(expr);
     }
@@ -190,8 +184,9 @@ public class ParserImpl
     }
     public Object compoundstmt____BEGIN_localdecls_stmtlist_END(Object s1, Object s2) throws Exception {
         ArrayList<ParseTree.LocalDecl> localDecls = (ArrayList<ParseTree.LocalDecl>)s1; // s1 is the list of local declarations
+        
         ArrayList<ParseTree.Stmt> stmtList = (ArrayList<ParseTree.Stmt>)s2; // s2 is the list of statements within the block
-        env = env.prev;
+        env = env.prev; // Pop the current scope
         return new ParseTree.CompoundStmt(localDecls, stmtList);
     }
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -205,7 +200,7 @@ public class ParserImpl
     }
     Object localdecls____eps() throws Exception
     {
-        env = new Env(env);
+    	env = new Env(env);
         return new ArrayList<ParseTree.LocalDecl>();
     }
     Object localdecl____VAR_IDENT_TYPEOF_typespec_SEMI(Object s1, Object s2, Object s3, Object s4, Object s5)throws Exception{
@@ -558,6 +553,7 @@ public class ParserImpl
     Object primtype____BOOL(Object s1) throws Exception {
         return new ParseTree.TypeSpec("bool");
     }
+
 
     // Print statement
     Object stmt____printstmt(Object s1) throws Exception {

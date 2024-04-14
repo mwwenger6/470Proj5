@@ -1,12 +1,11 @@
-import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
 
 public class Env {
     private Map<String, Object> table;
+    private HashMap<String, String> functionTypes = new HashMap<>();
+    private HashMap<String, Boolean> functionReturns = new HashMap<>();
+    private String currentFunction = null; 
     public Env prev;
 
     public Env(Env p) {
@@ -16,6 +15,9 @@ public class Env {
 
     public void Put(String name, Object value) {
         table.put(name, value);
+    }
+    public void putFunctionType(String funcName, String type) {
+        functionTypes.put(funcName + "()", type);
     }
 
     public Object Get(String name) {
@@ -30,11 +32,32 @@ public class Env {
     public Object GetLocal(String name) {
         return table.get(name);
     }
-    
-    public void printEnvironment() {
-        table.entrySet().forEach(entry -> {
-            System.out.println("Scope " + entry.getKey() + " -> " + entry.getValue());
-        });
+    public String getFunctionType(String funcName) {
+        for (Env e = this; e != null; e = e.prev) {
+            String type = e.functionTypes.get(funcName);
+            if (type != null) {
+                return type;
+            }
+        }
+        return null;
     }
-    
+    public void setCurrentFunction(String funcName) {
+        currentFunction = funcName + "()";
+        functionReturns.put(currentFunction, false); // Initialize with no return encountered
+    }
+
+    public String getCurrentFunction() {
+        return currentFunction;
+    }
+    public void clearCurrentFunction() {
+        currentFunction = null;
+    }
+    public void markReturnEncountered() {
+        if (currentFunction != null) {
+            functionReturns.put(currentFunction, true);
+        }
+    }
+    public boolean isReturnEncountered() {
+        return functionReturns.getOrDefault(currentFunction, false);
+    }
 }
