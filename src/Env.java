@@ -7,7 +7,8 @@ public class Env {
     private HashMap<String, String> functionTypes = new HashMap<>();
     private HashMap<String, Boolean> functionReturns = new HashMap<>();
     private HashMap<String, ArrayList<String>> paramTypes = new HashMap<>(); 
-    private HashMap<String, ArrayList<String>> paramIdents = new HashMap<>(); 
+    private HashMap<String, ArrayList<String>> paramIdents = new HashMap<>();
+    private int localAddressCounter = 0; 
     private String currentFunction = null; 
     public Env prev;
 
@@ -75,7 +76,11 @@ public class Env {
         }
         return new ArrayList<>();
     }
-    
+    public int newAddress(String varName) {
+        localAddressCounter += 1;  // Increment the counter
+        return localAddressCounter;  // Return the new address
+    }
+  
 
     public String getCurrentFunction() {
         return currentFunction;
@@ -91,4 +96,5 @@ public class Env {
     public boolean isReturnEncountered() {
         return functionReturns.getOrDefault(currentFunction, false);
     }
+
 }

@@ -59,11 +59,14 @@ public class ParserImpl
         if (env.GetLocal(token.lexeme) != null) {
             throw new Exception("[Error at " + token.lineno + ":" + token.column + "] Identifier " + token.lexeme + " is already defined.");
         }
+        int relAddr = -(env.getParamIdents(env.getCurrentFunction()).size() + 1);
         ArrayList<String> identList = env.getParamIdents(env.getCurrentFunction());
         identList.add(token.lexeme);
-        env.setParamIdents(env.getCurrentFunction(), identList);
+        relAddr = env.newAddress(token.lexeme);
         env.Put(token.lexeme, typespec.typename);
-        return new ParseTree.Param(token.lexeme, typespec);
+        ParseTree.Param param = new ParseTree.Param(token.lexeme, typespec);
+        param.reladdr = relAddr;
+        return param;
     }
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
@@ -237,8 +240,10 @@ public class ParserImpl
         if (env.GetLocal(id.lexeme) != null || paramIdents.contains(id.lexeme)) {  // GetLocal should only check the current scope
             throw new Exception("[Error at " + id.lineno + ":" + id.column + "] Identifier " + id.lexeme + " is already defined.");
         }
+        int relAddr = env.newAddress(id.lexeme);
         env.Put(id.lexeme, typespec.typename);
-        localdecl.reladdr = 1;
+        
+        localdecl.reladdr = relAddr;
         return localdecl;
     }
     Object args____eps() throws Exception
@@ -619,7 +624,7 @@ public class ParserImpl
         ParseTree.Expr index = (ParseTree.Expr)s3;
         ParseTree.Expr value = (ParseTree.Expr)s5;
         if (env.Get(id.lexeme) == null) {
-            throw new Exception("[Error at " + id.lineno + ":" + id.column + "] Variable " + id.lexeme + " is not defined.");
+            throw new Exception("[Error at " + id.lineno + ":" + id.column + "] Array " + id.lexeme + " is not defined.");
         }
         if (!index.info.type.equals("num"))
             throw new Exception("[Error at " + ((Token)s1).lineno + ":" + ((Token)s1).column + "] Array index must be num value.");
