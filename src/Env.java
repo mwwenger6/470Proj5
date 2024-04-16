@@ -8,6 +8,7 @@ public class Env {
     private HashMap<String, Boolean> functionReturns = new HashMap<>();
     private HashMap<String, ArrayList<String>> paramTypes = new HashMap<>(); 
     private HashMap<String, ArrayList<String>> paramIdents = new HashMap<>();
+    private Map<String, Integer> addressMap; 
     private int localAddressCounter = 0; 
     private String currentFunction = null; 
     public Env prev;
@@ -15,10 +16,13 @@ public class Env {
     public Env(Env p) {
         this.prev = p;
         this.table = new HashMap<>();
+        this.addressMap = new HashMap<>();
+        this.localAddressCounter = 1;
     }
 
     public void Put(String name, Object value) {
         table.put(name, value);
+        addressMap.put(name, localAddressCounter++);
     }
     public void putFunctionType(String funcName, String type) {
         functionTypes.put(funcName + "()", type);
@@ -76,11 +80,14 @@ public class Env {
         }
         return new ArrayList<>();
     }
-    public int newAddress(String varName) {
-        localAddressCounter += 1;  // Increment the counter
-        return localAddressCounter;  // Return the new address
+    public Integer getAddress(String name) {
+        for (Env e = this; e != null; e = e.prev) {
+            if (e.addressMap.containsKey(name)) {
+                return e.addressMap.get(name);
+            }
+        }
+        return null; 
     }
-  
 
     public String getCurrentFunction() {
         return currentFunction;

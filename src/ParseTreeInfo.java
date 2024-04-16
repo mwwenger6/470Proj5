@@ -54,6 +54,7 @@ public class ParseTreeInfo
     }
     public static class StmtStmtInfo
     {
+        public boolean result;
     }
     public static class ArgInfo
     {
@@ -70,5 +71,6 @@ public class ParseTreeInfo
         public Object value; 
         public boolean hasParen;
         public String identName;
+        public int arraySize;
     }
 }

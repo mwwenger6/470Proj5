@@ -59,13 +59,11 @@ public class ParserImpl
         if (env.GetLocal(token.lexeme) != null) {
             throw new Exception("[Error at " + token.lineno + ":" + token.column + "] Identifier " + token.lexeme + " is already defined.");
         }
-        int relAddr = -(env.getParamIdents(env.getCurrentFunction()).size() + 1);
         ArrayList<String> identList = env.getParamIdents(env.getCurrentFunction());
         identList.add(token.lexeme);
-        relAddr = env.newAddress(token.lexeme);
         env.Put(token.lexeme, typespec.typename);
         ParseTree.Param param = new ParseTree.Param(token.lexeme, typespec);
-        param.reladdr = relAddr;
+        param.reladdr = env.getAddress(token.lexeme);
         return param;
     }
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -164,24 +162,8 @@ public class ParserImpl
             throw new Exception(String.format("[Error at %d:%d] Variable %s should have %s value, instead of %s value.",
                                           id.lineno, id.column, id.lexeme, id_type, expr.info.type));
         }
-        // {
-        //     // check if expr.type matches with id_type
-        //     if(id_type.equals("num")
-        //         && (expr instanceof ParseTree.ExprNumLit)
-        //         )
-        //         {} // ok
-        //     else if(id_type.equals("num")
-        //         && (expr instanceof ParseTree.ExprFuncCall)
-        //         && (env.Get(((ParseTree.ExprFuncCall)expr).ident).equals("num()"))
-        //         )
-        //     {} // ok
-        //     else
-        //     {
-        //         throw new Exception("semantic error");
-        //     }
-        // }
         ParseTree.AssignStmt stmt = new ParseTree.AssignStmt(id.lexeme, expr);
-        stmt.ident_reladdr = 1;
+        stmt.ident_reladdr =  env.getAddress(id.lexeme);
         return stmt;
     }
     Object returnstmt____RETURN_expr_SEMI(Object s1, Object s2, Object s3) throws Exception
@@ -201,7 +183,8 @@ public class ParserImpl
         ArrayList<ParseTree.Stmt> elseStmtList = (ArrayList<ParseTree.Stmt>)s5; // s5 is the list of statements for the "else" part
         if(!cond.info.type.equals("bool"))
             throw new Exception("[Error at " + cond.info.lineNumber + ":" + cond.info.columnNumber + "] Condition of if or while statement should be bool value.");
-        return new ParseTree.IfStmt(cond, thenStmtList, elseStmtList);
+        ParseTree.Stmt stmt = new ParseTree.IfStmt(cond, thenStmtList, elseStmtList);
+        return stmt;
     }
     public Object whilestmt____WHILE_expr_BEGIN_stmtlist_END(Object s1, Object s3) throws Exception {
         ParseTree.Expr cond = (ParseTree.Expr)s1; // s1 is the condition expression
@@ -240,10 +223,8 @@ public class ParserImpl
         if (env.GetLocal(id.lexeme) != null || paramIdents.contains(id.lexeme)) {  // GetLocal should only check the current scope
             throw new Exception("[Error at " + id.lineno + ":" + id.column + "] Identifier " + id.lexeme + " is already defined.");
         }
-        int relAddr = env.newAddress(id.lexeme);
         env.Put(id.lexeme, typespec.typename);
-        
-        localdecl.reladdr = relAddr;
+        localdecl.reladdr = env.getAddress(id.lexeme);  
         return localdecl;
     }
     Object args____eps() throws Exception
@@ -418,7 +399,7 @@ public class ParserImpl
         expr.info.lineNumber = id.lineno;
         expr.info.columnNumber = id.column;
         expr.info.identName = id.lexeme;
-        expr.reladdr = 1;
+        expr.reladdr = env.getAddress(id.lexeme);
         return expr;
     }
     Object expr____IDENT_LPAREN_args_RPAREN(Object s1, Object s2, Object s3, Object s4) throws Exception
@@ -465,6 +446,7 @@ public class ParserImpl
         number.info.type = "num";
         number.info.lineNumber = token.lineno;
         number.info.columnNumber = token.column;
+        // number.info.value = Integer.parseInt(token.lexeme);
         return number;
     }
     public Object expr____NEW_primtype_LBRACKET_expr_RBRACKET(Object s2, Object s4) throws Exception {
@@ -478,11 +460,9 @@ public class ParserImpl
         Token idToken = (Token)s1;
         String ident = ((Token)s1).lexeme; // Array identifier
         ParseTree.Expr indexExpr = (ParseTree.Expr)s3; // Index expression
-        // if (!elemType.equals(indexExpr.info.type)) {
-        //     throw new Exception("[Error at " + ((Token)s1).lineno + ":" + ((Token)s1).column + "] Index expression must be of type " + elemType + ".");
-        // }
+        
         if (env.Get(ident) == null) {
-            throw new Exception("[Error at " + idToken.lineno + ":" + idToken.column + "] Identifier " + ident + " is not defined.");
+            throw new Exception("[Error at " + idToken.lineno + ":" + idToken.column + "] Array " + ident + " is not defined.");
         }
         String typeInfo = (String)env.Get(ident);
         if (!typeInfo.endsWith("[]")) {
@@ -495,11 +475,15 @@ public class ParserImpl
 
         ParseTree.ExprArrayElem result = new ParseTree.ExprArrayElem(ident, indexExpr);
         result.info.type = elemType;
+        result.reladdr = env.getAddress(idToken.lexeme);
         return result; 
     }
     public Object expr____IDENT_DOT_SIZE(Object s1) throws Exception {
         String ident = ((Token)s1).lexeme; // Array identifier
-        return new ParseTree.ExprArraySize(ident);
+        ParseTree.ExprArraySize exprArray = new ParseTree.ExprArraySize(ident);
+        exprArray.info.type = "num";
+        exprArray.reladdr = env.getAddress(ident);
+        return exprArray;
     }
     public Object expr____expr_SUB_expr(Object s1, Object s2, Object s3) throws Exception {
         ParseTree.Expr expr1 = (ParseTree.Expr)s1; // Left operand
@@ -627,14 +611,16 @@ public class ParserImpl
             throw new Exception("[Error at " + id.lineno + ":" + id.column + "] Array " + id.lexeme + " is not defined.");
         }
         if (!index.info.type.equals("num"))
-            throw new Exception("[Error at " + ((Token)s1).lineno + ":" + ((Token)s1).column + "] Array index must be num value.");
+            throw new Exception("[Error at " + index.info.lineNumber + ":" + index.info.columnNumber + "] Array index must be num value.");
         String arrayType = (String)env.Get(id.lexeme);
         String elemType = arrayType.substring(0, arrayType.length() - 2);
         if (!value.info.type.equals(elemType)) {
             throw new Exception(String.format("[Error at %d:%d] Element of array %s should have %s value, instead of %s value.",
                                               id.lineno, id.column, id.lexeme, elemType, value.info.type));
         }
-        return new ParseTree.AssignStmtForArray(id.lexeme, index, value);
+        ParseTree.AssignStmtForArray assignStmt = new ParseTree.AssignStmtForArray(id.lexeme, index, value);
+        assignStmt.ident_reladdr = env.getAddress(id.lexeme);
+        return assignStmt;
     }
 
     // Adding an argument to an argument list
